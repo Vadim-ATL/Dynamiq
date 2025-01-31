@@ -1,7 +1,8 @@
 use crate::core::dependencies::*;
 use crate::core::Integrator::Integrator;
 use crate::core::DifferentialEquation::DifferentialEquation;
-pub struct ODESolver<T: Float> {
+
+pub struct ODESolver<T: Float > {
     timestep: f64,
     end_time: f64,
     num_steps: usize,
@@ -15,39 +16,37 @@ pub struct ODESolver<T: Float> {
 //step_controller: Option<Box<dyn StepSizeController<T>>>,
 //config: Option<SolverConfig<T>>,
 //dense_output: Option<Box<dyn DenseOutput<T>>>,
-
-impl<T: Float> ODESolver<T> {
+impl <T: Float > ODESolver<T>{
     pub fn new(
         timestep: f64, 
         end_time: f64, 
-        state_size: usize, 
         initial_state: Array1<T>,
-        integrator:Box<dyn Integrator<T>>,
+        integrator:Box<dyn Integrator<T>>, 
     ) -> Self {
-        let num_steps = (end_time / timestep) as usize; 
+        let num_steps = (end_time / timestep) as usize;
 
         ODESolver {
             timestep,
             end_time,
             num_steps,
             initial_state,
-            integrator,
-            times: Vec::with_capacity(num_steps + 1), 
+            integrator, 
+            times: Vec::with_capacity(num_steps + 1),
             positions: Vec::with_capacity(num_steps + 1),
-            exact_positions: None, 
+            exact_positions: None,
         }
     }
 
     pub fn integrate(&mut self, equation: &dyn DifferentialEquation<T>) {
-        let mut t = T::zero();  // T is a generic type, should be initialized correctly
+        let mut t = T::zero(); 
         let mut state = self.initial_state.clone();
         
         self.times.push(t);
         self.positions.push(state.clone());
     
         for _ in 0..self.num_steps {
-            //state = self.integrator.step(equation, t, &state.view(), self.timestep);
-            t = t + T::from(self.timestep).unwrap();  // Using T, not f64
+            state = self.integrator.step(equation, t, &state.view(), self.timestep);
+            t = t + T::from(self.timestep).unwrap();  
             
             self.times.push(t);
             self.positions.push(state.clone());

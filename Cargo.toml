@@ -1,0 +1,9 @@
+[package]
+name = "Dynamiq"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ndarray = "0.16.1"
+num = "0.4.3"
+pyo3 = "0.23.4"
