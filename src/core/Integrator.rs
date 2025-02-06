@@ -6,5 +6,5 @@ pub trait Integrator<T: Float> {
            equation: &dyn DifferentialEquation<T>,
            t: T, 
            state: &ArrayView1<T>, 
-           dt: f64) -> Array1<T>;
+           dt: T) -> Array1<T>;
 }

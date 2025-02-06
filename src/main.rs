@@ -8,7 +8,12 @@ use python_bindings::RK4::{self, RK4_Method};
 use core::ODE::ODESolver;
 
 struct HarmonicOscillator {
-    omega: f64, 
+    omega: f64,
+}
+impl HarmonicOscillator{
+    pub fn get_omega(&self) -> f64 {
+        self.omega
+    }
 }
 
 impl DifferentialEquation<f64> for HarmonicOscillator {
@@ -19,60 +24,20 @@ impl DifferentialEquation<f64> for HarmonicOscillator {
         derivatives[0] = state[1];                  
         derivatives[1] = -self.omega * self.omega * state[0]; 
     }
+
 }
 
 
 fn main() {
 
+    let omega: f64 = 2.0 * PI;  
+
+    let oscillator = HarmonicOscillator { omega };    
+    let integrator = Box::new(RK4::RK4_Method::new(2));
+    let mut solver: ODESolver<f64> = ODESolver::new(0.01, 2.0, Array1::from(vec![1.0, 0.0]), integrator);
     
-    let omega = 2.0 * PI;  
+    solver.integrate(&oscillator, Array1::from(vec![omega]));
 
-    let timestep = 0.01;  
-    let end_time: f64 = 2.0;   
-    let num_steps = (end_time / timestep) as usize;
+    solver.get_numerical_values();
 
-    let oscillator = HarmonicOscillator { omega };
-
-    let initial_state = Array1::from(vec![1.0, 0.0]);
-    
-    let solver = ODESolver::new(0.01, 2.0, Array1::from(vec![1.0, 0.0]), RK4::RK4_Method);
-
-
-    let mut integrator = RK4::RK4_Method::new(2);
-
-    let mut times = Vec::with_capacity(num_steps + 1);
-    let mut positions = Vec::with_capacity(num_steps + 1);
-    let mut exact_positions = Vec::with_capacity(num_steps + 1);
-
-    let mut current_state = initial_state.clone();
-    let mut t = 0.0;
-
-    times.push(t);
-    positions.push(current_state[0]);
-    exact_positions.push(1.0);  
-
-    for _ in 0..num_steps {
-        current_state = integrator.step(&oscillator, t, &current_state.view(), timestep);
-        t += timestep;
-
-        times.push(t);
-        positions.push(current_state[0]);
-        exact_positions.push((omega * t).cos());
-    }
-
-    let max_error = positions.iter()
-        .zip(exact_positions.iter())
-        .map(|(x, x_exact)| (x - x_exact).abs())
-        .fold(0.0f64, |max, error| max.max(error));
-
-    println!("[MAE] Maximum absolute error: {:.4e}", max_error);
-    
-    println!("\nFirst values (t, numerical, exact, error):");
-    for i in 0..5 {
-        println!("t = {:.3}: {:.6}, {:.6}, {:.2e}",
-                times[i],
-                positions[i],
-                exact_positions[i],
-                (positions[i] - exact_positions[i]).abs());
-    }
 }

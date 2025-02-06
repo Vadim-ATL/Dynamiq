@@ -30,12 +30,13 @@ impl<T: Float + ScalarOperand> RK4_Method<T> {
 /// state - (array) represent current state of the system
 /// the time step dt 
 impl<T: Float + ScalarOperand> Integrator<T> for RK4_Method<T> {
-    fn step(&mut self, equation: &dyn DifferentialEquation<T>, t: T, state: &ArrayView1<T>, dt: f64) -> Array1<T> {  
+    fn step(&mut self, equation: &dyn DifferentialEquation<T>, t: T, state: &ArrayView1<T>, dt: T) -> Array1<T> {  
         
         ///Constants initialization
-        const half: f64 = 0.5;
-        const sixth: f64 = 1.0 / 6.0;
-        const third: f64 = 1.0 / 3.0;
+        let half = T::from(0.5).expect("Conversion failed for half");
+        let sixth = T::from(1.0 / 6.0).expect("Conversion failed for sixth");
+        let third = T::from(1.0 / 3.0).expect("Conversion failed for third");
+
 
         // Convert constants to the type `T` and handle the result without unwrap
 
