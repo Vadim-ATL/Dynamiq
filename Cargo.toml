@@ -6,4 +6,5 @@ edition = "2021"
 [dependencies]
 ndarray = "0.16.1"
 num = "0.4.3"
+numpy = "0.23.0"
 pyo3 = "0.23.4"

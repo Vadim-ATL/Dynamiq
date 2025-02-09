@@ -7,26 +7,36 @@ use core::DifferentialEquation::DifferentialEquation;
 use python_bindings::RK4::{self, RK4_Method};
 use core::ODE::ODESolver;
 
-struct HarmonicOscillator {
-    omega: f64,
+pub struct HarmonicOscillator<T: Float> {
+    omega: T,
 }
-impl HarmonicOscillator{
-    pub fn get_omega(&self) -> f64 {
-        self.omega
+
+impl<T: Float> HarmonicOscillator<T> {
+    pub fn new(omega: T) -> Self {
+        Self { omega }
     }
 }
 
-impl DifferentialEquation<f64> for HarmonicOscillator {
+impl<T: Float> DifferentialEquation<T> for HarmonicOscillator<T> {
+    fn evaluate(&self, _t: T, state: &ArrayView1<T>, derivatives: &mut Array1<T>) {
+        derivatives[0] = state[1]; // dx/dt = v
+        derivatives[1] = -self.omega * self.omega * state[0]; // dv/dt = -ω²x
+    }
+
     fn dimension(&self) -> usize {
         2
     }
-    fn evaluate(&self, _t: f64, state: &ArrayView1<f64>, derivatives: &mut Array1<f64>) {
-        derivatives[0] = state[1];                  
-        derivatives[1] = -self.omega * self.omega * state[0]; 
+
+    /// Exact solution: x(t) = cos(ωt), v(t) = -sin(ωt)
+    fn exact_solution(&self, t: T) -> Option<Array1<T>> {
+        let time = t.to_f64()?; 
+        let omega = self.omega.to_f64()?; 
+        let exact_x = T::from((omega * time).cos())?;
+        let exact_v = T::from(-(omega * time).sin())?;
+        
+        Some(Array1::from(vec![exact_x, exact_v]))
     }
-
 }
-
 
 fn main() {
 
@@ -36,7 +46,7 @@ fn main() {
     let integrator = Box::new(RK4::RK4_Method::new(2));
     let mut solver: ODESolver<f64> = ODESolver::new(0.01, 2.0, Array1::from(vec![1.0, 0.0]), integrator);
     
-    solver.integrate(&oscillator, Array1::from(vec![omega]));
+    solver.integrate(&oscillator);
 
     solver.get_numerical_values();
 

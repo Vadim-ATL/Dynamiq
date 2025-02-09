@@ -1,19 +1,20 @@
-use crate::core::dependencies::*;
 use crate::core::DifferentialEquation::DifferentialEquation; 
 use crate::core::Integrator::Integrator;
+use crate::core::dependencies::*;
+
 
 #[derive(Debug)]
-pub struct RK4_Method<T: Float + ScalarOperand> {
+pub struct RK4_Method {
     ///Temp array for storing calculation
-    temp: Array1<T>,
+    temp: Array1<f64>,
     ///The four slopes for RK4
-    k1: Array1<T>,
-    k2: Array1<T>,
-    k3: Array1<T>,
-    k4: Array1<T>,
+    k1: Array1<f64>,
+    k2: Array1<f64>,
+    k3: Array1<f64>,
+    k4: Array1<f64>,
 }
 ///RK4 Constructor with zeroed arrays shaped as state_size
-impl<T: Float + ScalarOperand> RK4_Method<T> {
+impl RK4_Method {
     pub fn new(state_size: usize) -> Self {
         RK4_Method {
             k1: Array1::zeros(state_size),
@@ -29,14 +30,13 @@ impl<T: Float + ScalarOperand> RK4_Method<T> {
 /// t - current time
 /// state - (array) represent current state of the system
 /// the time step dt 
-impl<T: Float + ScalarOperand> Integrator<T> for RK4_Method<T> {
-    fn step(&mut self, equation: &dyn DifferentialEquation<T>, t: T, state: &ArrayView1<T>, dt: T) -> Array1<T> {  
+impl Integrator<f64> for RK4_Method{
+    fn step(&mut self, equation: &dyn DifferentialEquation<f64>, t: f64, state: &ArrayView1<f64>, dt: f64) -> Array1<f64> {  
         
         ///Constants initialization
-        let half = T::from(0.5).expect("Conversion failed for half");
-        let sixth = T::from(1.0 / 6.0).expect("Conversion failed for sixth");
-        let third = T::from(1.0 / 3.0).expect("Conversion failed for third");
-
+        let half = 0.5;
+        let sixth = 1.0/6.0;
+        let third = 1.0/3.0;
 
         // Convert constants to the type `T` and handle the result without unwrap
 
@@ -79,8 +79,7 @@ impl<T: Float + ScalarOperand> Integrator<T> for RK4_Method<T> {
         self.k4.mapv_inplace(|x| x * dt);
         /// 1/6 and 1/3 converting to float for further calculation
         /// of the result
-        let sixth = T::from(1.0 / 6.0).unwrap();
-        let third = T::from(1.0 / 3.0).unwrap();
+
         ///taking state vector to result and making it mutable, owned Array1
         let mut result = state.to_owned();
         ///finally weighed_sum is 1/6 * k1 + 1/3 * k2 + 1/3 * k3 + 1/6 * k4
@@ -91,3 +90,4 @@ impl<T: Float + ScalarOperand> Integrator<T> for RK4_Method<T> {
         result
     }
 }
+

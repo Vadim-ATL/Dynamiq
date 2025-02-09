@@ -38,35 +38,37 @@ impl <T: Float + std::fmt::Display> ODESolver<T>{
         }
     }
 
-    pub fn integrate(&mut self, equation: &dyn DifferentialEquation<T>, add_params: Array1<f64>) {
+    pub fn integrate(&mut self, equation: &dyn DifferentialEquation<T>) {
         let mut t = T::zero(); 
         let mut state = self.initial_state.clone();
         
         self.times.push(t);
         self.positions.push(state.clone());
-    
-        let mut exact_positions = Vec::with_capacity(self.num_steps + 1);
-        exact_positions.push(self.initial_state.clone());
-    
+
+        let mut exact_positions = equation.exact_solution(t).map(|s| vec![s]);
+
         for _ in 0..self.num_steps {
-            
-            // Numerical solution
-            state = self.integrator.step(equation, t, &state.view(), T::from(self.timestep).expect("Conversion failed"));
-            t = t + T::from(self.timestep).unwrap();  
-            
+            // Numerical step
+            if let Some(step_size) = T::from(self.timestep) {
+                state = self.integrator.step(equation, t, &state.view(), step_size);
+                t = t + step_size;
+            } else {
+                break;
+            }
+
             self.times.push(t);
             self.positions.push(state.clone());
-    
-            // Exact solution
-            let omega = add_params[0];
-            let time = t.to_f64().unwrap();
-            let exact_x = T::from((time * omega).cos()).unwrap();
-            let exact_v = T::from(-(time * omega).sin()).unwrap();
-            exact_positions.push(Array1::from(vec![exact_x, exact_v]));
-        }
-        self.exact_positions = Some(exact_positions);
-    }
 
+            // Exact solution
+            if let Some(ref mut positions) = exact_positions {
+                if let Some(exact) = equation.exact_solution(t) {
+                    positions.push(exact);
+                }
+            }
+        }
+
+        self.exact_positions = exact_positions;
+    }
     
     pub fn get_numerical_values(&self) {
         println!("\nFirst values (t, numerical, exact, error):");
