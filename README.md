@@ -27,7 +27,7 @@
 - [Tests](#tests)
 - [Built Using](#built_using)
 - [TODO](TODO.md)
-- [LICENSE](LICENSE.md)
+- [LICENSE](LICENSE)
 - [Authors](#authors)
 
 ## About <a name = "about"></a>
